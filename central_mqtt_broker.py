@@ -1,66 +1,54 @@
-"""import json
-import paho.mqtt.publish as publish
-import time
+import paho.mqtt.client as mqtt
+import json
+import sys
+import yaml
 
-broker_address = "localhost"
-broker_port = 1883
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
+    client.subscribe("vanetza/out/cam")
+    client.subscribe("vanetza/out/denm")
 
-rsu_topic = ["vanetza/out/cam","vanetza/out/denm"]
+def on_message(client, userdata, message):
+    #print("Received message '" + str(message.payload) + "' on topic '"
+          #+ message.topic + "' with QoS " + str(message.qos))
+    
+    msg = json.loads(message)
+    if((msg['stationID'] == 4) and (msg['receiverID'] in [1,2,3])): 
+        print("Received message '" + str(message.payload) + "' on topic '"
+        + message.topic + "' with QoS " + str(message.qos))
 
-f = open('examples/in_cam.json')
-    m = json.load(f)
-    m["latitude"] = 0
-    m["longitude"] = 0
-    m = json.dumps(m)
-    client.publish("vanetza/in/cam",m)
-    f.close()
+def get_ips_from_docker_compose(filename):
+    with open(filename, 'r') as file:
+        docker_config = yaml.safe_load(file)
+        rsu_ips = [docker_config['services'][service]['networks']['vanetzalan0']['ipv4_address'] for service in docker_config['services'] if service.startswith('rsu')]
+        central_broker_ip = "192.168.98.100" #docker_config['services']['central_broker']['networks']['vanetzalan0']['ipv4_address']
+        return rsu_ips, central_broker_ip
 
-rsus = [
-    {"ip": "192.168.98.10", "topic": rsu_topic[0], "message": rsu_message},
-    {"ip": "192.168.98.20", "topic": rsu_topic[0], "message": rsu_message},
-    {"ip": "192.168.98.30", "topic": rsu_topic[0], "message": rsu_message}
-]
+num_rsus = int(sys.argv[1])
+
+rsu_ips, central_broker_ip = get_ips_from_docker_compose('docker-compose.yml')
+
+rsu_clients = []
+rsu_ids = list(range(1, num_rsus + 1))
+for rsu_id, rsu_ip in zip(rsu_ids, rsu_ips):
+    rsu_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    rsu_client.on_connect = on_connect
+    rsu_client.on_message = on_message
+    rsu_client.connect(rsu_ip, 1883)
+    rsu_client.loop_start()
+    rsu_clients.append(rsu_client)
+
+central_broker = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+central_broker.on_connect = on_connect
+central_broker.on_message = on_message
+central_broker.connect(central_broker_ip, 1883)
+central_broker.loop_start()
+
+for rsu_client in rsu_clients:
+    rsu_client.publish("vanetza/in/cam", "Message to cam topic")
+    rsu_client.publish("vanetza/in/denm", "Message to denm topic")
+
+central_broker.publish("#", "Message to central broker")
 
 while True:
-    try:
-        for rsu in rsus:
-            publish.single(rsu["topic"], rsu["message"], hostname=broker_address, port=broker_port)
-            print(f"Message '{rsu['message']}' published to topic '{rsu['topic']}' from RSU with IP '{rsu['ip']}'")
-        time.sleep(5)  # Adjust the delay between messages as needed
-    except Exception as e:
-        print(f"Error: {e}")"""
-import json
-import paho.mqtt.publish as publish
-import time
-import paho.mqtt.client as mqtt
-import threading
-
-broker_address = "localhost"
-broker_port = 1883
-rsu_topic = ["vanetza/out/cam","vanetza/out/denm"]
-rsus = [
-    {"ip": "192.168.98.10", "topic": rsu_topic[0], "message": "HELLO"},
-    {"ip": "192.168.98.20", "topic": rsu_topic[0], "message": "HELLO"},
-    {"ip": "192.168.98.30", "topic": rsu_topic[0], "message": "HELLO"}
-]
-
-def connect_and_subscribe(ip, topic):
-    def on_message(client, userdata, message):
-        print(f"Received message from RSU at {ip}: {message.payload.decode()}")
-
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-
-    client.on_message = on_message
-
-    client.connect(broker_address, broker_port)
-    client.subscribe(topic)
-    client.loop_forever()
-
-threads = []
-for rsu in rsus:
-    thread = threading.Thread(target=connect_and_subscribe, args=(rsu['ip'], rsu['topic']))
-    threads.append(thread)
-    thread.start()
-
-for thread in threads:
-    thread.join()
+    pass

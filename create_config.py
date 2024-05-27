@@ -20,15 +20,13 @@ def block_communications(rsu_service_name, mac_addresses):
 
 def create_rsu_obu_config(num_rsus, num_obus):
 
-    f = open("/Downloads/vanetza-master/docker-compose.yml", 'r')
+    f = open("./docker-compose.yml", 'r')
     docker_compose_yml = yaml.load(f, Loader=yaml.FullLoader)
     
-    del[docker_compose_yml['services']['rsu']]
-    del[docker_compose_yml['services']['obu']]
+    del[docker_compose_yml['services']]
 
     services = {}
     
-    # Generate RSU configurations
     for idx in range(1, num_rsus + 1):
         rsu_service_name = f'rsu{idx}'
         rsu_mac_address = generate_mac_address(idx)
@@ -53,7 +51,6 @@ def create_rsu_obu_config(num_rsus, num_obus):
         }
         block_communications(rsu_service_name, [rsu_mac_address] + [generate_mac_address(obu_idx) for obu_idx in range(1, num_obus + 1)])
     
-    # Generate OBU configurations
     for idx in range(1, num_obus + 1):
         obu_service_name = f'obu{idx}'
         obu_mac_address = generate_mac_address(num_rsus + idx)

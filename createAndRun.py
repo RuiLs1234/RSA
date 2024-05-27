@@ -1,14 +1,15 @@
 import yaml
 import subprocess
 import sys
+import time
 
-def generate_mac_address(idx, base_mac='6e:06:e0:03'):
+def generate_mac_address(idx, base_mac='6e:06:e0:03:00'):
     """Generate a MAC address based on the index."""
     return f'{base_mac}:{idx:02x}'
 
 def generate_ipv4_address(idx, base_ip='192.168.98'):
     """Generate an IPv4 address based on the index."""
-    return f'{base_ip}.{10 + idx * 10}'
+    return f'{base_ip}.{idx * 10}'
 
 def block_communications(rsu_service_name, mac_addresses):
     for mac_address in mac_addresses:
@@ -16,15 +17,28 @@ def block_communications(rsu_service_name, mac_addresses):
             "docker-compose", "exec", rsu_service_name,
             "iptables", "-A", "INPUT", "-m", "mac", "--mac-source", mac_address, "-j", "DROP"
         ]
-        subprocess.run(command)
+        try:
+            subprocess.run(command, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to run command {command}: {e}")
+
+def wait_for_container(service_name):
+    """Wait until the container is fully running."""
+    while True:
+        command = [
+            "docker-compose", "ps", "-q", service_name
+        ]
+        container_id = subprocess.run(command, capture_output=True, text=True).stdout.strip()
+        if container_id:
+            command = [
+                "docker", "inspect", "-f", "{{.State.Running}}", container_id
+            ]
+            status = subprocess.run(command, capture_output=True, text=True).stdout.strip()
+            if status == "true":
+                break
+        time.sleep(1)
 
 def create_rsu_obu_config(num_rsus, num_obus):
-
-    f = open("./docker-compose.yml", 'r')
-    docker_compose_yml = yaml.load(f, Loader=yaml.FullLoader)
-    
-    del[docker_compose_yml['services']]
-
     services = {}
     
     for idx in range(1, num_rsus + 1):
@@ -49,7 +63,6 @@ def create_rsu_obu_config(num_rsus, num_obus):
                 }
             }
         }
-        block_communications(rsu_service_name, [rsu_mac_address] + [generate_mac_address(obu_idx) for obu_idx in range(1, num_obus + 1)])
     
     for idx in range(1, num_obus + 1):
         obu_service_name = f'obu{idx}'
@@ -88,10 +101,26 @@ def create_rsu_obu_config(num_rsus, num_obus):
 
 def write_docker_compose_file(config, filename='docker-compose.yml'):
     with open(filename, 'w') as file:
-        yaml.dump(config, file, default_flow_style=False)
+        yaml.dump(config, file, default_flow_style=False, sort_keys=False)
 
-num_rsus = int(sys.argv[1])
-num_obus = int(sys.argv[2])
+def main():
+    if len(sys.argv) != 3:
+        print("Usage: script.py <num_rsus> <num_obus>")
+        sys.exit(1)
 
-config = create_rsu_obu_config(num_rsus, num_obus)
-write_docker_compose_file(config)
+    num_rsus = int(sys.argv[1])
+    num_obus = int(sys.argv[2])
+
+    config = create_rsu_obu_config(num_rsus, num_obus)
+    write_docker_compose_file(config)
+    
+    subprocess.run(["docker-compose", "up", "-d"], check=True)
+
+    for idx in range(1, num_rsus + 1):
+        rsu_service_name = f'rsu{idx}'
+        wait_for_container(rsu_service_name)
+        mac_addresses = [generate_mac_address(obu_idx) for obu_idx in range(1, num_obus + 1)]
+        block_communications(rsu_service_name, mac_addresses)
+
+if __name__ == "__main__":
+    main()

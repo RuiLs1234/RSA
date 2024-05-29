@@ -7,7 +7,7 @@ import sys
 
 global_count = []
 obj = {}
-
+range_RSU = 0
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -18,13 +18,12 @@ def on_connect(client, userdata, flags, rc):
 
 # É chamada automaticamente sempre que recebe uma mensagem nos tópicos subscritos em cima
 def on_message(client, userdata, msg):
-    message = msg.payload.decode('utf-8')
     global obj
     
     print('Topic: ' + msg.topic)
-    print('Message' + message)
+    print('Message' + msg.payload.decode('utf-8'))
 
-    objt = json.loads(message)
+    objt = json.loads(msg.payload.decode('utf-8'))
     obj = objt
 
     # lat = obj["latitude"]
@@ -33,48 +32,44 @@ def on_message(client, userdata, msg):
 
 def generate(obj, ovus, latitude, longitude, size):
         global global_count
+        global range_RSU
         if obj["accEngaged"] == "Hello part" or obj["accEngaged"] == "Hello":  
-            i = 0
-            while i < size:
-                i = i+1
-                if obj["latitude"] <= latitude[i]+2000 and latitude[i]-2000 >= obj["latitude"]:
-                    if obj["longitude"] <= longitude[i]+2000 and longitude[i]-2000 >= obj["longitude"]:
-                        global_count[i] = global_count[i]+1
+            for i in range(size):
+                if latitude[i] - range_RSU <= obj["latitude"] <= latitude[i] + range_RSU:
+                    if longitude[i] - range_RSU <= obj["longitude"] <= longitude[i] + range_RSU:
+                        if obj["heading"] not in global_count[i]:
+                            global_count[i].append(obj["heading"])
                     
                       
         else:
             for number in global_count:
-                if ovus != number and number != 0:     
-                    f = open('examples/in_dem.json')
-                    m = json.load(f)
-                    obj["eventType"]["causeCode"] = 94
-                    m = json.dumps(m)
-                    client.publish("vanetza/in/dem",m)
-                    f.close()
-                    sleep(1)  
-        
+                if ovus != len(number) and len(number) != 0:     
+                    with open('examples/in_dem.json') as f:
+                        m = json.load(f)
+                        obj["eventType"]["causeCode"] = 94
+                        m = json.dumps(m)
+                        client.publish("vanetza/in/dem",m)
+                    sleep(1)
+        f.close()
 
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect("192.168.98.10", 1883, 60)
-total_RSU = sys.argv[1]
-total_ovu = sys.argv[2]
-total_RSU_latitude = sys.argv[3]
-total_RSU_longitude = sys.argv[4]
 
-if global_count == []:
-    i = 0
-    while i < total_RSU:
-        global_count.append(0)
-        i = i+1
+total_RSU = int(sys.argv[1])
+total_ovu = int(sys.argv[2])
+total_RSU_latitude = list(map(float, sys.argv[3].split(',')))
+total_RSU_longitude = list(map(float, sys.argv[4].split(',')))
+range_RSU = float(sys.argv[5])
 
+if not global_count:
+    global_count = [[] for _ in range(total_RSU)]
 
+for u in range(total_RSU):    
+    client.connect("192.168.98." + str(u) + "0", 1883, 60) #Criar um client para cada RSU
 
 threading.Thread(target=client.loop_forever).start()
 
-while(True):
-    i = 0
-    while i < total_RSU:
-        i = i+1
+while True:
+    for i in range(total_RSU):
         generate(obj, total_ovu, total_RSU_latitude, total_RSU_longitude, total_RSU)

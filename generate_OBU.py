@@ -3,8 +3,6 @@ import paho.mqtt.client as mqtt
 import threading
 from time import sleep
 import sys
-from geopy.distance import geodesic
-
 
 global_count = []
 obj = {}
@@ -33,11 +31,6 @@ def on_message(client, userdata, msg):
     # lat = obj["latitude"]
     # ...
     
-def calculate_new_position(lat, lon, distance_m, bearing):
-    start = (lat, lon)
-    new_position = geodesic(meters=distance_m).destination(start, bearing)
-    return new_position.latitude, new_position.longitude
-
 def generate(i):
     global longitude
     global latitude

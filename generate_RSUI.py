@@ -83,9 +83,6 @@ for rsu_id, rsu_ip in zip(rsu_ids, rsu_ips):
         rsu_clients.append(rsu_client)
         print(f"RSU {rsu_id} connected to {rsu_ip}")
 total_ovu = int(sys.argv[2])
-total_RSU_latitude = list(map(float, sys.argv[3].split(',')))
-total_RSU_longitude = list(map(float, sys.argv[4].split(',')))
-range_RSU = float(sys.argv[5])
 for gh in range(total_RSU):
     check.append(0)
     

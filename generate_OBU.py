@@ -71,15 +71,6 @@ client.connect(central_broker_ip, 1883)
 client.on_connect = on_connect
 client.on_message = on_message
 
-
-total_RSU_latitude = list(map(float, sys.argv[3].split(',')))
-total_RSU_longitude = list(map(float, sys.argv[4].split(',')))
-do_not_do = sys.argv[6]
-
-for i in range(total_ovu):
-    latitude.append(0)
-    longitude.append(0)
-
 threading.Thread(target=client.loop_forever).start()
 
 while True:

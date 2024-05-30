@@ -50,7 +50,7 @@ def generate(ovus, latitude, longitude, size):
                                         m = json.dumps(m)
                                         client.publish("vanetza/in/denm",m)
                             sleep(1)
-        f.close()
+                            f.close()
 
 client = mqtt.Client()
 client.on_connect = on_connect

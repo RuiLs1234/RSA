@@ -49,8 +49,8 @@ def generate(ovus, latitude, longitude, size):
                                         m["situation"]["eventType"]["causeCode"] = 94
                                         m = json.dumps(m)
                                         client.publish("vanetza/in/denm",m)
-                            sleep(1)
-        f.close()
+                                sleep(1)
+                                f.close()
 
 client = mqtt.Client()
 client.on_connect = on_connect

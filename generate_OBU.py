@@ -12,6 +12,7 @@ longitude = []
 total_RSU_latitude = []
 total_RSU_longitude = []
 point_reach = 0
+initicials = []
 
 def get_ips_from_docker_compose(filename):
     with open(filename, 'r') as file:
@@ -41,11 +42,18 @@ def generate(i):
     global point_reach
     global total_RSU_latitude
     global total_RSU_longitude
+    global initicials
 
     if i == 0:
         with open('examples/in_cam.json') as f:
             m = json.load(f)
             m["heading"] = i
+            if obj["latitude"] != initicials[0]:
+                initicials[0] = obj["latitude"]
+            if obj["longitude"] != initicials[1]:
+                initicials[1] = obj["longitude"]
+            m["latitude"] = initicials[0]
+            m["longitude"] = initicials[1]
             m = json.dumps(m)
             client.publish("vanetza/in/cam", m)
             sleep(1)
@@ -63,6 +71,7 @@ def generate(i):
 
 total_RSU = int(sys.argv[1])
 total_ovu = int(sys.argv[2])
+initicials = list(sys.argv[3])
 
 rsu_ips, central_broker_ip = get_ips_from_docker_compose('docker-compose.yml')
 

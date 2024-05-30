@@ -44,7 +44,7 @@ def generate(ovus, size, i):
     global done
     print("HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print(obj)
-    if str(obj) != "(<MQTTErrorCode.MQTT_ERR_SUCCESS: 0>, 1)" and obj != {}:
+    if str(obj) != "(<MQTTErrorCode.MQTT_ERR_SUCCESS: 0>, 1)" and obj != {} and "heading" in obj:
                         if obj["heading"] not in global_count[i]:
                             global_count[i].append(obj["heading"])
                         else:

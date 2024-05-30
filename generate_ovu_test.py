@@ -2,12 +2,12 @@ import json
 import paho.mqtt.client as mqtt
 import threading
 from time import sleep
-import sys
 
+# Global variables to store coordinates and state
 global_count = []
 obj = {}
-latitude = []
-longitude = []
+latitude = [0, 0, 0]
+longitude = [0, 0, 0]
 total_RSU_latitude = []
 total_RSU_longitude = []
 point_reach = 0
@@ -15,12 +15,10 @@ point_reach = 0
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
     client.subscribe("vanetza/out/cam")
-    # client.subscribe("vanetza/out/denm")
-    # ...
 
 def on_message(client, userdata, msg):
     global obj
-    
+
     print('Topic: ' + msg.topic)
     print('Message' + msg.payload.decode('utf-8'))
 
@@ -74,23 +72,22 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 
-total_RSU = int(sys.argv[1])
-total_ovu = int(sys.argv[2])
+total_RSU = 2
+total_ovu = 3
 
-u = 0
-while u < total_ovu:    
-    client.connect("192.168.98." + str(u) + "5", 1883, 60) #Criar um client para cada RSU
-    u = u + 1
+client.connect("192.168.98.10", 1883, 60)
 
-total_RSU_latitude = list(map(float, sys.argv[3].split(',')))
-total_RSU_longitude = list(map(float, sys.argv[4].split(',')))
+total_RSU_latitude = [2, 4]
+total_RSU_longitude = [2, 4]
 
-for i in range(total_ovu):
-    latitude.append(0)
-    longitude.append(0)
-
+# Start MQTT client loop in a separate thread
 threading.Thread(target=client.loop_forever).start()
 
 while True:
     for i in range(total_ovu):
         generate(i, total_RSU)
+
+
+
+
+

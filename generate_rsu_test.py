@@ -56,17 +56,20 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 
-total_RSU = int(sys.argv[1])
-total_ovu = int(sys.argv[2])
-total_RSU_latitude = list(map(float, sys.argv[3].split(',')))
-total_RSU_longitude = list(map(float, sys.argv[4].split(',')))
-range_RSU = float(sys.argv[5])
+total_RSU = 2
+total_ovu = 3
+
+client.connect("192.168.98.10", 1883, 60)
+
+total_RSU_latitude = [2, 4]
+total_RSU_longitude = [2, 4]
+range_RSU = 2
 
 if not global_count:
     global_count = [[] for _ in range(total_RSU)]
 
 for u in range(total_RSU):    
-    client.connect("192.168.98." + str(u) + "0", 1883, 60) #Criar um client para cada RSU
+    client.connect("192.168.98.20", 1883, 60) #Criar um client para cada RSU
 
 threading.Thread(target=client.loop_forever).start()
 

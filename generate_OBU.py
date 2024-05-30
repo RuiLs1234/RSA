@@ -3,6 +3,7 @@ import paho.mqtt.client as mqtt
 import threading
 from time import sleep
 import sys
+import yaml
 
 global_count = []
 obj = {}
@@ -19,7 +20,7 @@ def get_ips_from_docker_compose(filename):
         central_broker_ip = docker_config['services']['central']['networks']['vanetzalan0']['ipv4_address']
         return rsu_ips, central_broker_ip
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, userdata, flags, rc, properties):
     print("Connected with result code "+str(rc))
     client.subscribe("vanetza/out/cam")
     # client.subscribe("vanetza/out/denm")
@@ -66,7 +67,7 @@ total_ovu = int(sys.argv[2])
 rsu_ips, central_broker_ip = get_ips_from_docker_compose('docker-compose.yml')
 
 global central_broker
-client = mqtt.Client()
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.connect(central_broker_ip, 1883)
 client.on_connect = on_connect
 client.on_message = on_message
@@ -75,4 +76,4 @@ threading.Thread(target=client.loop_forever).start()
 
 while True:
     for i in range(total_ovu):
-        generate(i, total_RSU)
+        generate(i)

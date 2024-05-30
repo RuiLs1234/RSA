@@ -21,7 +21,7 @@ def get_ips_from_docker_compose(filename):
         central_broker_ip = docker_config['services']['central']['networks']['vanetzalan0']['ipv4_address']
         return rsu_ips, central_broker_ip
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, userdata, flags, rc, properties):
     global obj
     print("Connected with result code "+str(rc))
     obj = client.subscribe("vanetza/out/cam")

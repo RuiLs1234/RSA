@@ -11,6 +11,7 @@ import subprocess
 
 rsu_clients = []
 obu_clients = []
+disaster_struck = 0
 
 def on_connect(client, userdata, flags, rc, properties):
     print("Connected with result code " + str(rc))
@@ -39,7 +40,14 @@ def generate_random_path(start, end, num_points=10):
             path.append((mid_lat, mid_lon))
             i = i + 1
     path.append(end)
-    print(path)
+    global disaster_coordinate
+    disaster_coordinate = (
+        random.uniform(start[0], end[0]),
+        random.uniform(start[1], end[1]),
+    )
+    disaster_coordinate = (39.85, -8) #eliminar isto
+    print(disaster_coordinate[0])
+    print(disaster_coordinate[1])
     return path
 
 def simulate_obu_movement(start, end, speed, step_delay=1):
@@ -48,6 +56,7 @@ def simulate_obu_movement(start, end, speed, step_delay=1):
     current_pos = start
     unblocked_rsus = set()
     obu_mac_addresses = get_mac_addresses('docker-compose.yml', 'obu')
+    lost_obu_addresses = []
     for waypoint in path:
         while geodesic(current_pos, waypoint).meters > speed:
             direction_lat = waypoint[0] - current_pos[0]
@@ -56,7 +65,12 @@ def simulate_obu_movement(start, end, speed, step_delay=1):
             move_lat = speed * (direction_lat / distance)
             move_lon = speed * (direction_lon / distance)
             current_pos = (current_pos[0] + move_lat, current_pos[1] + move_lon)
-            print(current_pos)
+            generate_cam(current_pos)
+            if (disaster_struck == 0):
+                if disaster_coordinate[0] > start[0] and current_pos[0] >= disaster_coordinate[0] or disaster_coordinate[0] < start[0] and current_pos[0] <= disaster_coordinate[0]:
+                    lost_obu_addresses = block_obu_to_obu_communication() 
+                if disaster_coordinate[1] > start[1] and current_pos[1] >= disaster_coordinate[1] or disaster_coordinate[1] < start[1] and current_pos[1] <= disaster_coordinate[1]:
+                    lost_obu_addresses = block_obu_to_obu_communication()
             rsu_in_range = is_in_range(current_pos[0], current_pos[1], rsus_coordinates)
             if rsu_in_range[0]:
                 new_unblocked_rsus = set(rsu_in_range[1])
@@ -64,12 +78,13 @@ def simulate_obu_movement(start, end, speed, step_delay=1):
                     if rsu not in unblocked_rsus:
                         print(f"OBU at {current_pos} is within range of RSU {rsu}")
                         for obu_mac_address in obu_mac_addresses:
-                            command = ["docker-compose", "exec", rsu, "unblock", obu_mac_address]
-                            try:
-                                subprocess.run(command, check=True)
-                                print(f"Successfully unblocked MAC address {obu_mac_address} on {rsu}")
-                            except subprocess.CalledProcessError as e:
-                                print(f"Failed to run command {command}: {e}")
+                            if obu_mac_address not in lost_obu_addresses:
+                                command = ["docker-compose", "exec", rsu, "unblock", obu_mac_address]
+                                try:
+                                    subprocess.run(command, check=True)
+                                    print(f"Successfully unblocked MAC address {obu_mac_address} on {rsu}")
+                                except subprocess.CalledProcessError as e:
+                                    print(f"Failed to run command {command}: {e}")
                 unblocked_rsus.clear()
                 unblocked_rsus.update(new_unblocked_rsus)
             else:
@@ -79,12 +94,13 @@ def simulate_obu_movement(start, end, speed, step_delay=1):
             for rsu in unblocked_rsus.difference(new_unblocked_rsus):
                 print(f"OBU at {current_pos} is not in range of RSU {rsu}")
                 for obu_mac_address in obu_mac_addresses:
-                    command = ["docker-compose", "exec", rsu, "block", obu_mac_address]
-                    try:
-                        subprocess.run(command, check=True)
-                        print(f"Successfully blocked MAC address {obu_mac_address} on {rsu}")
-                    except subprocess.CalledProcessError as e:
-                        print(f"Failed to run command {command}: {e}")
+                    if obu_mac_address not in lost_obu_addresses:
+                        command = ["docker-compose", "exec", rsu, "block", obu_mac_address]
+                        try:
+                            subprocess.run(command, check=True)
+                            print(f"Successfully blocked MAC address {obu_mac_address} on {rsu}")
+                        except subprocess.CalledProcessError as e:
+                            print(f"Failed to run command {command}: {e}")
             unblocked_rsus = new_unblocked_rsus
 
             time.sleep(step_delay)
@@ -131,12 +147,52 @@ def get_mac_addresses(filename, serv):
         
     return mac_addresses
 
+def block_obu_to_obu_communication():
+    obu_mac_addresses = get_mac_addresses('docker-compose.yml', 'obu')
+    blocked_obu_mac_addresses = []
+    global disaster_struck
+    disaster_struck = 1
+    for i in range(lost_obu_id, num_obus + 1):
+        service_name = f'obu{i}'
+        for mac_address in obu_mac_addresses:
+            if int(mac_address[-1]) != (i+num_rsus):
+                command = [
+                    "docker-compose", "exec", service_name,
+                    "block", mac_address
+                ]
+                try:
+                    subprocess.run(command, check=True)
+                    print(f"Successfully blocked MAC address {mac_address} on {service_name}")
+                except subprocess.CalledProcessError as e:
+                    print(f"Failed to run command {command}: {e}")
+            else:
+                blocked_obu_mac_addresses.append(mac_address)
+    return blocked_obu_mac_addresses
+
+def generate_cam(current_pos):
+    client = obu_clients[0]
+    with open('docker-compose.yml', 'r') as file:
+        docker_config = yaml.safe_load(file)
+        for env_var in docker_config['services']['obu1']['environment']:
+            if env_var.startswith('VANETZA_STATION_ID='):
+                stationID = (env_var.split('=')[1])
+
+    f = open('examples/in_cam_upPos.json')
+    m = json.load(f)
+    m["stationID"] = stationID
+    m["latitude"] = current_pos[0]
+    m["longitude"] = current_pos[1]
+    m = json.dumps(m)
+    client.publish("vanetza/in/cam",m)
+    f.close()
+                    
 def main():
-    if len(sys.argv) != 9:
-        print("Usage: script.py <num_rsus> <num_obus> <RSUs range> <OBU velocity> <OBU start coordinates> <OBU end coordinates> <OBU to lose> <lost of OBU coordinates>")
+    if len(sys.argv) != 8:
+        print("Usage: script.py <num_rsus> <num_obus> <RSUs range> <OBU velocity> <OBU start coordinates> <OBU end coordinates> <OBU to lose>")
         sys.exit(1)
     global num_rsus
     num_rsus = int(sys.argv[1])
+    global num_obus
     num_obus = int(sys.argv[2])
     global rsu_range
     rsu_range = int(sys.argv[3])
@@ -145,8 +201,8 @@ def main():
     start_position = ast.literal_eval(start_position)
     end_position = sys.argv[6]
     end_position = ast.literal_eval(end_position)
+    global lost_obu_id
     lost_obu_id = int(sys.argv[7])
-    obu_lost_coordinates = int(sys.argv[8])
 
     global rsus_coordinates
     rsus_coordinates = get_rsu_coordinates('docker-compose.yml')
@@ -173,7 +229,7 @@ def main():
         obu_clients.append(obu_client)
         print(f"obu {obu_id} connected to {obu_ip}")
 
-    simulate_obu_movement(start_position, end_position, int(((train_velocity*1000)/3600)), step_delay=0.05)  # Speed in meters per step
+    simulate_obu_movement(start_position, end_position, 1000, step_delay=0.5)  # Speed in meters per step
 
     try:
         while True:

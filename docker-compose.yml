@@ -1,103 +1,104 @@
 version: '2.4'
 services:
-    rsu1:
-        hostname: rsu1
-        restart: always
-        image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
-        cap_add:
-            - "NET_ADMIN"
-        environment:
-            - VANETZA_STATION_ID=1
-            - VANETZA_STATION_TYPE=15
-            - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:01
-            - VANETZA_INTERFACE=br0
-            - START_EMBEDDED_MOSQUITTO=true
-            - SUPPORT_MAC_BLOCKING=true
-        networks:
-            vanetzalan0:
-                ipv4_address: 192.168.98.10
-    rsu2:          
-        hostname: rsu2
-        restart: always
-        image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
-        cap_add:
-            - "NET_ADMIN"
-        environment:
-            - VANETZA_STATION_ID=2
-            - VANETZA_STATION_TYPE=15
-            - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:02
-            - VANETZA_INTERFACE=br0
-            - START_EMBEDDED_MOSQUITTO=true
-            - SUPPORT_MAC_BLOCKING=true
-        networks:
-            vanetzalan0:
-                ipv4_address: 192.168.98.20
-    rsu3:           
-        hostname: rsu3
-        restart: always
-        image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
-        cap_add:
-            - "NET_ADMIN"
-        environment:
-            - VANETZA_STATION_ID=3
-            - VANETZA_STATION_TYPE=15
-            - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:03
-            - VANETZA_INTERFACE=br0
-            - START_EMBEDDED_MOSQUITTO=true
-            - SUPPORT_MAC_BLOCKING=true
-        networks:
-            vanetzalan0:
-                ipv4_address: 192.168.98.30
-
-    obu1:
-        hostname: obu1
-        restart: always
-        image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
-        cap_add:
-            - "NET_ADMIN"
-        environment:
-            - VANETZA_STATION_ID=4
-            - VANETZA_STATION_TYPE=0
-            - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:04
-            - VANETZA_INTERFACE=br0
-            - START_EMBEDDED_MOSQUITTO=true
-            - SUPPORT_MAC_BLOCKING=true
-        networks:
-            vanetzalan0:
-                ipv4_address: 192.168.98.40
-    obu2:            
-        hostname: obu2
-        restart: always
-        image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
-        cap_add:
-            - "NET_ADMIN"
-        environment:
-            - VANETZA_STATION_ID=5
-            - VANETZA_STATION_TYPE=0
-            - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:05
-            - VANETZA_INTERFACE=br0
-            - START_EMBEDDED_MOSQUITTO=true
-            - SUPPORT_MAC_BLOCKING=true
-        networks:
-            vanetzalan0:
-                ipv4_address: 192.168.98.50
-    obu3:            
-        hostname: obu3
-        restart: always
-        image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
-        cap_add:
-            - "NET_ADMIN"
-        environment:
-            - VANETZA_STATION_ID=6
-            - VANETZA_STATION_TYPE=0
-            - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:06
-            - VANETZA_INTERFACE=br0
-            - START_EMBEDDED_MOSQUITTO=true
-            - SUPPORT_MAC_BLOCKING=true
-        networks:
-            vanetzalan0:
-                ipv4_address: 192.168.98.60
-            
+  rsu1:
+    hostname: rsu1
+    restart: always
+    image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
+    cap_add:
+    - NET_ADMIN
+    environment:
+    - VANETZA_STATION_ID=1
+    - VANETZA_STATION_TYPE=15
+    - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:01
+    - VANETZA_INTERFACE=br0
+    - START_EMBEDDED_MOSQUITTO=true
+    - SUPPORT_MAC_BLOCKING=true
+    - VANETZA_IGNORE_OWN_MESSAGES
+    - VANETZA_LATITUDE=40.001
+    - VANETZA_LONGITUDE=-8.001
+    networks:
+      vanetzalan0:
+        ipv4_address: 192.168.98.10
+    volumes:
+    - ./tools/socktap/config.ini:/config.ini
+  rsu2:
+    hostname: rsu2
+    restart: always
+    image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
+    cap_add:
+    - NET_ADMIN
+    environment:
+    - VANETZA_STATION_ID=2
+    - VANETZA_STATION_TYPE=15
+    - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:02
+    - VANETZA_INTERFACE=br0
+    - START_EMBEDDED_MOSQUITTO=true
+    - SUPPORT_MAC_BLOCKING=true
+    - VANETZA_IGNORE_OWN_MESSAGES
+    - VANETZA_LATITUDE=41.001
+    - VANETZA_LONGITUDE=-8.001
+    networks:
+      vanetzalan0:
+        ipv4_address: 192.168.98.20
+    volumes:
+    - ./tools/socktap/config.ini:/config.ini
+  obu1:
+    hostname: obu1
+    restart: always
+    image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
+    cap_add:
+    - NET_ADMIN
+    environment:
+    - VANETZA_STATION_ID=3
+    - VANETZA_STATION_TYPE=0
+    - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:03
+    - VANETZA_INTERFACE=br0
+    - START_EMBEDDED_MOSQUITTO=true
+    - SUPPORT_MAC_BLOCKING=true
+    - VANETZA_IGNORE_OWN_MESSAGES
+    networks:
+      vanetzalan0:
+        ipv4_address: 192.168.98.30
+    volumes:
+    - ./tools/socktap/config.ini:/config.ini
+  obu2:
+    hostname: obu2
+    restart: always
+    image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
+    cap_add:
+    - NET_ADMIN
+    environment:
+    - VANETZA_STATION_ID=4
+    - VANETZA_STATION_TYPE=0
+    - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:04
+    - VANETZA_INTERFACE=br0
+    - START_EMBEDDED_MOSQUITTO=true
+    - SUPPORT_MAC_BLOCKING=true
+    - VANETZA_IGNORE_OWN_MESSAGES
+    networks:
+      vanetzalan0:
+        ipv4_address: 192.168.98.40
+    volumes:
+    - ./tools/socktap/config.ini:/config.ini
+  central:
+    hostname: central
+    restart: always
+    image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
+    cap_add:
+    - NET_ADMIN
+    environment:
+    - VANETZA_STATION_ID=0
+    - VANETZA_STATION_TYPE=0
+    - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:00
+    - VANETZA_INTERFACE=br0
+    - START_EMBEDDED_MOSQUITTO=true
+    - SUPPORT_MAC_BLOCKING=true
+    - VANETZA_IGNORE_OWN_MESSAGES
+    networks:
+      vanetzalan0:
+        ipv4_address: 192.168.98.5
+    volumes:
+    - ./tools/socktap/config.ini:/config.ini
 networks:
   vanetzalan0:
     external: true

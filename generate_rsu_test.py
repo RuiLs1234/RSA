@@ -28,8 +28,9 @@ def generate(ovus, size):
     global global_count
     global range_RSU
     global obj
-    
-    if str(obj) != "(<MQTTErrorCode.MQTT_ERR_SUCCESS: 0>, 1)":
+    print("HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(obj)
+    if str(obj) != "(<MQTTErrorCode.MQTT_ERR_SUCCESS: 0>, 1)" and obj != {}:
         for i in range(size):
                         if obj["heading"] not in global_count[i]:
                             global_count[i].append(obj["heading"])                                        
@@ -40,8 +41,8 @@ def generate(ovus, size):
                                         m["situation"]["eventType"]["causeCode"] = 94
                                         m = json.dumps(m)
                                         client.publish("vanetza/in/denm",m)
-                            sleep(1)
-                            f.close()
+                                sleep(1)
+                                f.close()
 
 
 

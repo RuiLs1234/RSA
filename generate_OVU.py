@@ -44,38 +44,19 @@ def generate(i, total_RSU):
     if i == 0 and do_not_do != i:
         with open('examples/in_cam.json') as f:
             m = json.load(f)
-            m["driveDirection"] = "Forward"
             m["heading"] = i
-            m["latitude"] = latitude[i]
-            m["longitude"] = longitude[i]
-
-            if point_reach < total_RSU:
-                if latitude[i] < total_RSU_latitude[point_reach]:
-                    latitude[i] += 1
-                if longitude[i] < total_RSU_longitude[point_reach]:
-                    longitude[i] += 1
-
-            if latitude[i] == total_RSU_latitude[point_reach] and longitude[i] == total_RSU_longitude[point_reach] and point_reach != total_RSU-1:
-                point_reach += 1
-
             m = json.dumps(m)
             client.publish("vanetza/in/cam", m)
             sleep(1)
+        f.close()
     elif do_not_do != i:
         with open('examples/in_cam.json') as f:
             m = json.load(f)
-            m["driveDirection"] = "Follow"
-            m["latitude"] = latitude[i]
             m["heading"] = i
-            m["longitude"] = longitude[i]
-
-            # Follow the previous coordinate
-            latitude[i] = latitude[i-1] - 1
-            longitude[i] = longitude[i-1] - 1
-
             m = json.dumps(m)
             client.publish("vanetza/in/cam", m)
             sleep(1)
+        f.close()
 
 
 
@@ -89,8 +70,6 @@ client = mqtt.Client()
 client.connect(central_broker_ip, 1883)
 client.on_connect = on_connect
 client.on_message = on_message
-
-
 
 
 total_RSU_latitude = list(map(float, sys.argv[3].split(',')))

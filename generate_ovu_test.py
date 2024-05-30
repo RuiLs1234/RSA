@@ -25,14 +25,14 @@ def on_message(client, userdata, msg):
     objt = json.loads(msg.payload.decode('utf-8'))
     obj = objt
 
-def generate(i, total_RSU):
+def generate(i, total_RSU, do_not_do):
     global longitude
     global latitude
     global point_reach
     global total_RSU_latitude
     global total_RSU_longitude
 
-    if i == 0:
+    if i == 0 and do_not_do != i:
         with open('examples/in_cam.json') as f:
             m = json.load(f)
             m["driveDirection"] = "Forward"
@@ -52,7 +52,7 @@ def generate(i, total_RSU):
             m = json.dumps(m)
             client.publish("vanetza/in/cam", m)
             sleep(1)
-    else:
+    elif do_not_do != i:
         with open('examples/in_cam.json') as f:
             m = json.load(f)
             m["driveDirection"] = "Follow"
@@ -79,13 +79,14 @@ client.connect("192.168.98.10", 1883, 60)
 
 total_RSU_latitude = [2, 4]
 total_RSU_longitude = [2, 4]
+do_not_do = 0
 
 # Start MQTT client loop in a separate thread
 threading.Thread(target=client.loop_forever).start()
 
 while True:
     for i in range(total_ovu):
-        generate(i, total_RSU)
+        generate(i, total_RSU, do_not_do)
 
 
 

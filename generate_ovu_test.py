@@ -25,7 +25,7 @@ def on_message(client, userdata, msg):
     objt = json.loads(msg.payload.decode('utf-8'))
     obj = objt
 
-def generate(i, total_RSU):
+def generate(i, total_RSU, do_not_do):
     global longitude
     global latitude
     global point_reach

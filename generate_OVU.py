@@ -34,14 +34,14 @@ def on_message(client, userdata, msg):
     objt = json.loads(msg.payload.decode('utf-8'))
     obj = objt
 
-def generate(i, total_RSU):
+def generate(i):
     global longitude
     global latitude
     global point_reach
     global total_RSU_latitude
     global total_RSU_longitude
 
-    if i == 0 and do_not_do != i:
+    if i == 0:
         with open('examples/in_cam.json') as f:
             m = json.load(f)
             m["heading"] = i
@@ -49,7 +49,7 @@ def generate(i, total_RSU):
             client.publish("vanetza/in/cam", m)
             sleep(1)
         f.close()
-    elif do_not_do != i:
+    else:
         with open('examples/in_cam.json') as f:
             m = json.load(f)
             m["heading"] = i

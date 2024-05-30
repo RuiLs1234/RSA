@@ -158,7 +158,7 @@ def main():
     for idx in range(1, num_rsus + 1):
         rsu_service_name = f'rsu{idx}'
         wait_for_container(rsu_service_name)
-        mac_addresses = [generate_mac_address(obu_idx) for obu_idx in range(1, num_obus + 1)]
+        mac_addresses = [generate_mac_address(obu_idx) for obu_idx in range(1, num_obus + num_rsus + 1)]
         block_communications(rsu_service_name, mac_addresses)
 
 if __name__ == "__main__":

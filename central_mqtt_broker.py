@@ -11,17 +11,13 @@ processed_messages = set()
 def on_connect(client, userdata, flags, rc, properties=None):
     client_id = client._client_id.decode('utf-8')
     print(f"Connected to {client_id} with result code {rc}")
-    #if client_id == "central_broker":
-    client.subscribe("vanetza/out/denm")
-    #    print(f"{client_id} subscribed to vanetza/out/denm")
-    #else:
-    #    client.subscribe("vanetza/out/denm")
-    #    print(f"{client_id} subscribed to trainInfo")
+    if client_id == "central_broker":
+        client.subscribe("vanetza/out/denm")
 
 def on_message(client, userdata, message):
     msg = message.payload.decode('utf-8')
     obj = json.loads(msg)
-    
+    print(obj)
     if message.topic == "vanetza/out/denm":
         sequence_number = obj['fields']['denm']['management']['actionID']['sequenceNumber']
         if not sequence_number in processed_messages:

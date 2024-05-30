@@ -1,17 +1,47 @@
-#when running the script the RSUs coordinates argument should be used like this '[[40.0000,-8.0000],[41.0000,-8.0000],[42.0000,-8.0000]]'
-if [ "$#" -ne 7 ]; then
-    echo "Usage: $0 <number of RSUs> <number of OBUs> <RSUs coordinates> <RSUs range in meters> <train velocity> <initial OBU coordinates> <OBU to lose> <OBU lose coordinates>"
+#!/bin/bash
+if [ "$#" -ne 9 ]; then
+    echo "Usage: $0 <number of RSUs> <number of OBUs> <RSUs coordinates> <RSUs range in meters> \
+<train velocity> <initial OBU coordinates> <end OBU coordinates> <OBU to lose> <RSU to detect the lost of OBU>"
     exit 1
 fi
-if [ $5 >= $2] || [ $5 <= 1 ]; then
-    echo "OBU to lose must be between 2 and number of OBUs - 1"
+
+num_rsus=$1
+num_obus=$2
+rsu_coordinates=$3
+rsu_range=$4
+train_velocity=$5
+initial_obu_coordinates=$6
+end_obu_coordinates=$7
+obu_to_lose=$8
+rsu_to_detect_loss=$9
+
+if [ "$obu_to_lose" -gt "$num_obus" ] || [ "$obu_to_lose" -le 1 ]; then
+    echo "OBU to lose must be between 2 and number of OBUs"
     exit 1
 fi
-sudo docker network create vanetzalan0 --subnet 192.168.98.0/24
-python3 /Downloads/vanetza-master/create_config.py $1 $2 $3
-sleep 3
-python3 /Downloads/vanetza-master/central_mqtt_broker.py $1
+
+if ! sudo docker network ls | grep -q vanetzalan0; then
+    sudo docker network create vanetzalan0 --subnet 192.168.98.0/24
+fi
+
+create_config_script="create_config.py"
+central_mqtt_broker_script="central_mqtt_broker.py"
+init_simulation_script="init_simulation.py"
+generate_rsui_script="generate_RSUI.py"
+generate_obu_script="generate_OBU.py"
+
+if [ ! -f "$create_config_script" ] || [ ! -f "$central_mqtt_broker_script" ] || [ ! -f "$init_simulation_script" ] || [ ! -f "$generate_rsui_script" ] || [ ! -f "$generate_obu_script" ]; then
+    echo "One or more Python scripts are missing"
+    exit 1
+fi
+
+python3 "$create_config_script" "$num_rsus" "$num_obus" "$rsu_coordinates"
+
+gnome-terminal -- bash -c "python3 $central_mqtt_broker_script $num_rsus; exec bash"
+gnome-terminal -- bash -c "python3 $generate_rsui_script; exec bash"
+gnome-terminal -- bash -c "python3 $generate_obu_script; exec bash"
 sleep 2
-python3 /Downloads/vanetza-master/init_simulation.py $1 $2 $3 $4
-python3 /Downloads/vanetza-master/generate_RSUI.py
-python3 /Downloads/vanetza-master/generate_OBU.py
+gnome-terminal -- bash -c "python3 $init_simulation_script $num_rsus $num_obus $rsu_range $train_velocity $initial_obu_coordinates $end_obu_coordinates $obu_to_lose $rsu_to_detect_loss; exec bash"
+
+# Example command to run this script
+# ./run.sh 3 3 [[40.0000,-8.0000],[41.0000,-8.0000],[42.0000,-8.0000]] 500 70 [39.8,-8] [42.2,-8] 3 2

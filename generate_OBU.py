@@ -44,7 +44,7 @@ def generate(i):
     global total_RSU_longitude
     global initicials
 
-    if i == 0:
+    if i == 0 and obj != {} and "heading" in obj:
         with open('examples/in_cam.json') as f:
             m = json.load(f)
             m["heading"] = i
@@ -58,6 +58,14 @@ def generate(i):
             client.publish("vanetza/in/cam", m)
             sleep(1)
         f.close()
+    elif obj != {} and "heading" in obj:
+        with open('examples/in_cam.json') as f:
+            m = json.load(f)
+            m["heading"] = i
+            m = json.dumps(m)
+            client.publish("vanetza/in/cam", m)
+            sleep(1)
+        f.close()
     else:
         with open('examples/in_cam.json') as f:
             m = json.load(f)
@@ -66,6 +74,7 @@ def generate(i):
             client.publish("vanetza/in/cam", m)
             sleep(1)
         f.close()
+
 
 
 

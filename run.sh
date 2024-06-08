@@ -26,21 +26,21 @@ fi
 create_config_script="create_config.py"
 central_mqtt_broker_script="central_mqtt_broker.py"
 init_simulation_script="init_simulation.py"
-generate_rsui_script="generate_RSUI.py"
-generate_obu_script="generate_OBU.py"
+rsu_script="RSU.py"
+obu_script="OBU.py"
 
-if [ ! -f "$create_config_script" ] || [ ! -f "$central_mqtt_broker_script" ] || [ ! -f "$init_simulation_script" ] || [ ! -f "$generate_rsui_script" ] || [ ! -f "$generate_obu_script" ]; then
+if [ ! -f "$create_config_script" ] || [ ! -f "$central_mqtt_broker_script" ] || [ ! -f "$init_simulation_script" ] || [ ! -f "$rsu_script" ] || [ ! -f "$obu_script" ]; then
     echo "One or more Python scripts are missing"
     exit 1
 fi
 
 python3 "$create_config_script" "$num_rsus" "$num_obus" "$rsu_coordinates"
 
-gnome-terminal -- bash -c "python3 $central_mqtt_broker_script $num_rsus; exec bash"
-gnome-terminal -- bash -c "python3 $generate_rsui_script $num_rsus $num_obus ; exec bash"
-gnome-terminal -- bash -c "python3 $generate_obu_script $num_rsus $num_obus; exec bash"
+gnome-terminal -- bash -c "python3 $central_mqtt_broker_script; exec bash"
+gnome-terminal -- bash -c "python3 $rsu_script $num_rsus $num_obus ; exec bash"
+gnome-terminal -- bash -c "python3 $obu_script $num_rsus $num_obus $initial_obu_coordinates $end_obu_coordinates; exec bash"
 sleep 2
 gnome-terminal -- bash -c "python3 $init_simulation_script $num_rsus $num_obus $rsu_range $train_velocity $initial_obu_coordinates $end_obu_coordinates $obu_to_lose; exec bash"
 
 # Example command to run this script
-# sudo ./run.sh 3 3 [[40.0000,-8.0000],[41.0000,-8.0000],[42.0000,-8.0000]] 500 70 [39.8,-8] [42.2,-8] 3
+# sudo ./run.sh 3 3 [[39.982034,-8.0000],[39.991017,-8.0000],[40.0000,-8.0000]] 450 70 [39.978,-8] [40.005,-8] 3

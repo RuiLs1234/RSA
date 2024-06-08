@@ -123,6 +123,30 @@ def create_rsu_obu_config(num_rsus, num_obus, rsu_coordinates):
             	'./tools/socktap/config.ini:/config.ini'
             ]
     }
+
+    services["simulation"] = {
+    	'hostname': 'simulation',
+    	'restart': 'always',
+            'image': 'code.nap.av.it.pt:5050/mobility-networks/vanetza:latest',
+            'cap_add': ['NET_ADMIN'],
+            'environment': [
+                'VANETZA_STATION_ID=-1',
+                'VANETZA_STATION_TYPE=0',
+                'VANETZA_MAC_ADDRESS=6e:06:e0:03:00:99',
+                'VANETZA_INTERFACE=br0',
+                'START_EMBEDDED_MOSQUITTO=true',
+                'SUPPORT_MAC_BLOCKING=true',
+                'VANETZA_IGNORE_OWN_MESSAGES'
+            ],
+            'networks': {
+                'vanetzalan0': {
+                    'ipv4_address': '192.168.98.6'
+                }
+            },
+            'volumes': [
+            	'./tools/socktap/config.ini:/config.ini'
+            ]
+    }
     
     docker_compose = {
         'version': '2.4',
@@ -142,7 +166,7 @@ def write_docker_compose_file(config, filename='docker-compose.yml'):
 
 def main():
     if len(sys.argv) != 4:
-        print("Usage: script.py <num_rsus> <num_obus> <RSUs coordinates")
+        print("Usage: script.py <num_rsus> <num_obus> <RSUs coordinates>")
         sys.exit(1)
 
     num_rsus = int(sys.argv[1])
@@ -159,6 +183,7 @@ def main():
         rsu_service_name = f'rsu{idx}'
         wait_for_container(rsu_service_name)
         mac_addresses = [generate_mac_address(obu_idx) for obu_idx in range(1, num_obus + num_rsus + 1)]
+        mac_addresses.append('6e:06:e0:03:00:99')
         block_communications(rsu_service_name, mac_addresses)
 
 if __name__ == "__main__":

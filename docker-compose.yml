@@ -14,8 +14,8 @@ services:
     - START_EMBEDDED_MOSQUITTO=true
     - SUPPORT_MAC_BLOCKING=true
     - VANETZA_IGNORE_OWN_MESSAGES
-    - VANETZA_LATITUDE=40.001
-    - VANETZA_LONGITUDE=-8.001
+    - VANETZA_LATITUDE=39.982034
+    - VANETZA_LONGITUDE=-8.0
     networks:
       vanetzalan0:
         ipv4_address: 192.168.98.10
@@ -35,34 +35,36 @@ services:
     - START_EMBEDDED_MOSQUITTO=true
     - SUPPORT_MAC_BLOCKING=true
     - VANETZA_IGNORE_OWN_MESSAGES
-    - VANETZA_LATITUDE=41.001
-    - VANETZA_LONGITUDE=-8.001
+    - VANETZA_LATITUDE=39.991017
+    - VANETZA_LONGITUDE=-8.0
     networks:
       vanetzalan0:
         ipv4_address: 192.168.98.20
     volumes:
     - ./tools/socktap/config.ini:/config.ini
-  obu1:
-    hostname: obu1
+  rsu3:
+    hostname: rsu3
     restart: always
     image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
     cap_add:
     - NET_ADMIN
     environment:
     - VANETZA_STATION_ID=3
-    - VANETZA_STATION_TYPE=0
+    - VANETZA_STATION_TYPE=15
     - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:03
     - VANETZA_INTERFACE=br0
     - START_EMBEDDED_MOSQUITTO=true
     - SUPPORT_MAC_BLOCKING=true
     - VANETZA_IGNORE_OWN_MESSAGES
+    - VANETZA_LATITUDE=40.0
+    - VANETZA_LONGITUDE=-8.0
     networks:
       vanetzalan0:
         ipv4_address: 192.168.98.30
     volumes:
     - ./tools/socktap/config.ini:/config.ini
-  obu2:
-    hostname: obu2
+  obu1:
+    hostname: obu1
     restart: always
     image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
     cap_add:
@@ -78,6 +80,44 @@ services:
     networks:
       vanetzalan0:
         ipv4_address: 192.168.98.40
+    volumes:
+    - ./tools/socktap/config.ini:/config.ini
+  obu2:
+    hostname: obu2
+    restart: always
+    image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
+    cap_add:
+    - NET_ADMIN
+    environment:
+    - VANETZA_STATION_ID=5
+    - VANETZA_STATION_TYPE=0
+    - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:05
+    - VANETZA_INTERFACE=br0
+    - START_EMBEDDED_MOSQUITTO=true
+    - SUPPORT_MAC_BLOCKING=true
+    - VANETZA_IGNORE_OWN_MESSAGES
+    networks:
+      vanetzalan0:
+        ipv4_address: 192.168.98.50
+    volumes:
+    - ./tools/socktap/config.ini:/config.ini
+  obu3:
+    hostname: obu3
+    restart: always
+    image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
+    cap_add:
+    - NET_ADMIN
+    environment:
+    - VANETZA_STATION_ID=6
+    - VANETZA_STATION_TYPE=0
+    - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:06
+    - VANETZA_INTERFACE=br0
+    - START_EMBEDDED_MOSQUITTO=true
+    - SUPPORT_MAC_BLOCKING=true
+    - VANETZA_IGNORE_OWN_MESSAGES
+    networks:
+      vanetzalan0:
+        ipv4_address: 192.168.98.60
     volumes:
     - ./tools/socktap/config.ini:/config.ini
   central:
@@ -97,6 +137,25 @@ services:
     networks:
       vanetzalan0:
         ipv4_address: 192.168.98.5
+    volumes:
+    - ./tools/socktap/config.ini:/config.ini
+  simulation:
+    hostname: simulation
+    restart: always
+    image: code.nap.av.it.pt:5050/mobility-networks/vanetza:latest
+    cap_add:
+    - NET_ADMIN
+    environment:
+    - VANETZA_STATION_ID=-1
+    - VANETZA_STATION_TYPE=0
+    - VANETZA_MAC_ADDRESS=6e:06:e0:03:00:99
+    - VANETZA_INTERFACE=br0
+    - START_EMBEDDED_MOSQUITTO=true
+    - SUPPORT_MAC_BLOCKING=true
+    - VANETZA_IGNORE_OWN_MESSAGES
+    networks:
+      vanetzalan0:
+        ipv4_address: 192.168.98.6
     volumes:
     - ./tools/socktap/config.ini:/config.ini
 networks:

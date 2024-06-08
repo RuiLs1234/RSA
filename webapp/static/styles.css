@@ -1,0 +1,19 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+#map-container {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    border: 1px solid #ccc;
+    margin: 20px auto;
+}
+
+.square {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: red;
+}
+

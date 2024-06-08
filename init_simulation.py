@@ -41,11 +41,10 @@ def generate_random_path(start, end, num_points=10):
             i = i + 1
     path.append(end)
     global disaster_coordinate
-    disaster_coordinate = [39.98, -8]
-    """disaster_coordinate = (
+    disaster_coordinate = (
         random.uniform(start[0], end[0]),
         random.uniform(start[1], end[1]),
-    )"""
+    )
     return path
 
 def simulate_obu_movement(start, end, speed, step_delay=1):
